@@ -91,8 +91,8 @@ def mover(entidad, dx, dy):
 def mover_enemigo_lento(e, paso):
     if paso % 2 != 0:
         return
-    dx = 1 if e['x'] < player['x'] else -1 if e['x'] > player['x'] else 0
-    dy = 1 if e['y'] < player['y'] else -1 if e['y'] > player['y'] else 0
+    dx = 1 if e['x'] < player['x'] else -10 if e['x'] > player['x'] else 0
+    dy = 1 if e['y'] < player['y'] else -10 if e['y'] > player['y'] else 0
     opciones = [(dx, 0), (0, dy), (dx, dy)]
     random.shuffle(opciones)
     for ox, oy in opciones:
