@@ -8,7 +8,7 @@ pygame.init()
 # Configuración de la pantalla y título
 ANCHO, ALTO = 800, 600
 pantalla = pygame.display.set_mode((ANCHO, ALTO))
-pygame.display.set_caption("Bad Circles")
+pygame.display.set_caption("BAD CIRCLES")
 
 # Colores
 FONDO = (180, 240, 255) 

@@ -10,7 +10,7 @@ ROWS = HEIGHT // TILE
 COLS = WIDTH // TILE
 
 win = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Bad Circles - Nivel 1")
+pygame.display.set_caption("BAD CIRCLES - Nivel 1")
 
 # Colores
 BLACK = (0, 0, 0)

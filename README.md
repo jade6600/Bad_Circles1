@@ -1,5 +1,6 @@
 # Ayuda a nuestro amigo a volver a casa
 
+
 ## ¿De que trata?
 
 El juego se bada en que nuestro amigo "Bad Circles" esta perdido, necesita volver a casa ayudalo para que tenga un buen viaje y pueda escapar de sus enemigos, pudiendo recolectar la comida necesaria.
