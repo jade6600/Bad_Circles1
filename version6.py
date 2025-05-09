@@ -1,169 +1,265 @@
 import pygame
 import random
 import math
+import os
 import time
 
+# Inicializar Pygame
 pygame.init()
 
-# Configuración de la pantalla y título
-ANCHO, ALTO = 800, 600
-pantalla = pygame.display.set_mode((ANCHO, ALTO))
-pygame.display.set_caption("BAD CIRCLES")
+# --- Pantalla de presentación (Splash Screen) ---
+def mostrar_splash_screen():
+    ancho_ventana = 800
+    alto_ventana = 600
+    ventana = pygame.display.set_mode((ancho_ventana, alto_ventana))
+    pygame.display.set_caption("Bad Circles")
 
-# Colores
-FONDO = (180, 240, 255) 
-PASTO = (110, 200, 80) 
-NEGRO = (0, 0, 0)
-ROJO = (255, 100, 100)
-ENEMIGO_COLOR = (100, 30, 30)
-FRUTAS_COLORES = [(255, 0, 0), (255, 165, 0), (138, 43, 226)] # manzana, naranja, uva
+    BLANCO = (255, 255, 255)
+    GRIS_CLARO = (200, 200, 200)
+    AMARILLO = (255, 255, 0)
+    AZUL = (135,206,150)
 
-# Jugador y enemigo
-jugador = pygame.Rect(400, 300, 40, 40)
-enemigo = pygame.Rect(100, 100, 40, 40)
-vel_jugador = 4
-vel_enemigo = 1
+    fuente = pygame.font.Font(None, 48)
+    fuente_pequena = pygame.font.Font(None, 30)
+    fuente_extra_pequena = pygame.font.Font(None, 24)
 
-# Frutas
-frutas = [pygame.Rect(random.randint(50, 750), random.randint(50, 550), 20, 25) for _ in range(5)]
-puntos = 0
-nivel = 1
-obstaculos = []
+    texto_principal = "Bad Circles"
+    superficie_principal = fuente.render(texto_principal, True, BLANCO)
+    rect_principal = superficie_principal.get_rect(center=(ancho_ventana // 2, alto_ventana // 2 - 50))
 
-# Fuentes y reloj
-fuente = pygame.font.Font(None, 36)
-reloj = pygame.time.Clock()
+    superficie_bloque1 = fuente_pequena.render("Colegio San José de Guanentá", True, GRIS_CLARO)
+    rect_bloque1 = superficie_bloque1.get_rect(midtop=(rect_principal.centerx, rect_principal.bottom + 10))
 
-# Función para dibujar el fondo tipo pasto
-def dibujar_fondo():
-    pantalla.fill(FONDO)
-    for x in range(0, ANCHO, 40):
-        for y in range(0, ALTO, 40):
-            pygame.draw.rect(pantalla, PASTO, (x, y, 35, 35), 1)
+    superficie_bloque2 = fuente_pequena.render("Especialidad en Sistemas", True, GRIS_CLARO)
+    rect_bloque2 = superficie_bloque2.get_rect(midtop=(rect_principal.centerx, rect_bloque1.bottom + 5))
 
-# Función para dibujar el jugador
-def dibujar_jugador():
-    pygame.draw.circle(pantalla, ROJO, jugador.center, 20) # Círculo rojo
-    cx, cy = jugador.center
-    pygame.draw.circle(pantalla, NEGRO, (cx - 8, cy - 6), 3) # ojo izquierdo
-    pygame.draw.circle(pantalla, NEGRO, (cx + 8, cy - 6), 3) # ojo derecho
-    pygame.draw.arc(pantalla, NEGRO, (cx - 10, cy + 5, 20, 10), math.pi, 2 * math.pi, 2) # boca enojada
+    texto_creditos = "Sorteh Jhull Florez Peñaloza, Nicolle Daniela Macias Piracon y Jorge Luis Silva Morales"
+    superficie_bloque3 = fuente_extra_pequena.render(texto_creditos, True, AMARILLO)
+    rect_bloque3 = superficie_bloque3.get_rect(midtop=(rect_principal.centerx, rect_bloque2.bottom + 15))
 
-# Función para dibujar el enemigo
-def dibujar_enemigo():
-    pygame.draw.rect(pantalla, ENEMIGO_COLOR, enemigo) # enemigo
+    ejecutando = True
+    reloj = pygame.time.Clock()
 
+    while ejecutando:
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+            elif evento.type == pygame.KEYDOWN or evento.type == pygame.MOUSEBUTTONDOWN:
+                ejecutando = False  # Continuar al juego
 
+        ventana.fill(AZUL)
+        ventana.blit(superficie_principal, rect_principal)
+        ventana.blit(superficie_bloque1, rect_bloque1)
+        ventana.blit(superficie_bloque2, rect_bloque2)
+        ventana.blit(superficie_bloque3, rect_bloque3)
 
-# Función para mover al enemigo
-def mover_enemigo():
-    dx, dy = jugador.centerx - enemigo.centerx, jugador.centery - enemigo.centery
-    dist = math.hypot(dx, dy)
-    if dist > 0:
-        enemigo.x += int(vel_enemigo * dx / dist)
-        enemigo.y += int(vel_enemigo * dy / dist)
-
-# Función para dibujar las frutas
-def dibujar_frutas():
-    for i, fruta in enumerate(frutas):
-        color = FRUTAS_COLORES[i % len(FRUTAS_COLORES)]
-        pygame.draw.ellipse(pantalla, color, fruta) # Cuerpo de la fruta
-        pygame.draw.line(pantalla, (34, 139, 34), (fruta.centerx, fruta.top), (fruta.centerx, fruta.top - 5), 2) # Tallo
-
-# Función para dibujar obstáculos
-def dibujar_obstaculos():
-    for obs in obstaculos:
-        pygame.draw.rect(pantalla, (139, 69, 19), obs) 
-
-# Función para mover los obstáculos
-def mover_obstaculos():
-    global obstaculos
-    for obs in obstaculos:
-        obs.x -= 2 # Obstáculos izquierda
-        if obs.right < 0: # Si sale de la pantalla se reubica
-            obstaculos.remove(obs)
-            obstaculos.append(pygame.Rect(ANCHO, random.randint(50, ALTO - 50), 40, 40))
-
-# Función para comprobar las colisiones con las frutas
-def comprobar_frutas():
-    global puntos
-    for i, fruta in enumerate(frutas):
-        if jugador.colliderect(fruta):
-            puntos += 1
-            frutas[i].x = random.randint(50, 750)
-            frutas[i].y = random.randint(50, 550)
-
-# Función para comprobar la colisión con el enemigo
-def comprobar_enemigo():
-    global nivel
-    if jugador.colliderect(enemigo):
-        nivel = 1 # Reiniciar el nivel
-        return True
-    return False
-
-# Función para aumentar la dificultad del juego (más rápido, más obstáculos)
-def aumentar_dificultad():
-    global vel_enemigo, obstaculos, nivel
-    if puntos >= 5 and nivel == 1:
-        nivel = 2
-        vel_enemigo = 2 # Aumentar la velocidad del enemigo
-        obstaculos.append(pygame.Rect(ANCHO, random.randint(50, ALTO - 50), 40, 40)) # Añadir un obstáculo
-    elif puntos >= 10 and nivel == 2:
-        nivel = 3
-        vel_enemigo = 3 # Aumentar aún más la velocidad del enemigo
-        obstaculos.append(pygame.Rect(ANCHO, random.randint(50, ALTO - 50), 40, 40)) # Añadir más obstáculos
-
-# Función para mostrar los puntos y el nivel
-def mostrar_puntos():
-    texto = fuente.render(f"Puntos: {puntos} Nivel: {nivel}", True, NEGRO)
-    pantalla.blit(texto, (10, 10))
-
-# Función para mostrar el mensaje de Game Over
-def mostrar_game_over():
-    texto = fuente.render(f"¡Perdiste! Puntos: {puntos}", True, NEGRO)
-    pantalla.blit(texto, (ANCHO // 2 - texto.get_width() // 2, ALTO // 2))
-    pygame.display.flip()
-    pygame.time.wait(3000) # Esperar 3 segundos
-# Función principal del juego
-def juego():
-    global puntos, nivel, obstaculos
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-        # Movimiento del jugador
-        teclas = pygame.key.get_pressed()
-        jugador.x += (teclas[pygame.K_RIGHT] - teclas[pygame.K_LEFT]) * vel_jugador
-        jugador.y += (teclas[pygame.K_DOWN] - teclas[pygame.K_UP]) * vel_jugador
-
-        # Aumentando la dificultad
-        aumentar_dificultad()
-
-        # Mover al enemigo
-        mover_enemigo()
-        mover_obstaculos()
-
-        # Comprobar colisiones
-        comprobar_frutas()
-        if comprobar_enemigo():
-            mostrar_game_over()
-            break
-
-        # Dibujar todo en pantalla
-        dibujar_fondo()
-        dibujar_jugador()
-        dibujar_enemigo()
-        dibujar_frutas()
-        dibujar_obstaculos()
-        mostrar_puntos()
-
-        # Actualizar pantalla
         pygame.display.flip()
         reloj.tick(60)
 
-# Ejecutar el juego
-juego()
+# --- Funciones del juego ---
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Bad Circles")
 
-pygame.quit()
+# Colores
+RED = (255, 0, 0)
+BLUE = (0, 150, 255)
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+DARK_GREEN = (0, 100, 0)
+DARK_RED = (100, 0, 0)
+
+clock = pygame.time.Clock()
+FPS = 60
+
+FONT = pygame.font.Font(None, 36)
+BIG_FONT = pygame.font.Font(None, 60)
+
+def draw_player(x, y, radius, color):
+    pygame.draw.circle(screen, color, (x, y), radius)
+
+def draw_monster(x, y, size):
+    pygame.draw.rect(screen, (0, 255, 0), (x, y, size, size))
+
+def draw_fruits(fruits):
+    for fruit in fruits:
+        pygame.draw.circle(screen, WHITE, fruit, 12)
+
+def draw_button(text, y_offset, color_bg):
+    button_rect = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 + y_offset, 200, 50)
+    pygame.draw.rect(screen, color_bg, button_rect, border_radius=10)
+    label = FONT.render(text, True, WHITE)
+    screen.blit(label, (button_rect.x + 100 - label.get_width() // 2, button_rect.y + 10))
+    return button_rect
+
+def save_highscore(score):
+    try:
+        with open("highscores.txt", "a") as f:
+            f.write(f"{score}\n")
+    except:
+        pass
+
+def show_highscores():
+    screen.fill(BLACK)
+    title = BIG_FONT.render("🏆 Mejores Puntajes", True, WHITE)
+    screen.blit(title, (WIDTH//2 - title.get_width()//2, 40))
+    try:
+        with open("highscores.txt", "r") as f:
+            scores = sorted([int(x.strip()) for x in f.readlines()], reverse=True)[:5]
+            for i, score in enumerate(scores):
+                line = FONT.render(f"{i+1}. {score} puntos", True, WHITE)
+                screen.blit(line, (WIDTH//2 - 80, 120 + i*40))
+    except:
+        error = FONT.render("No hay puntajes guardados.", True, WHITE)
+        screen.blit(error, (WIDTH//2 - 120, 150))
+    pygame.display.flip()
+    pygame.time.wait(3000)
+
+def show_instructions():
+    screen.fill(BLACK)
+    lines = [
+        "Jugador 1: Flechas (← ↑ ↓ →)",
+        "Jugador 2: W A S D",
+        "Recolecten TODAS las frutas para avanzar.",
+        "¡Eviten al monstruo! Si uno es atrapado, pierden los dos.",
+        "",
+        "Presiona ESC para volver al menú."
+    ]
+    for i, line in enumerate(lines):
+        text = FONT.render(line, True, WHITE)
+        screen.blit(text, (WIDTH // 2 - text.get_width() // 2, 100 + i * 40))
+    pygame.display.flip()
+    waiting = True
+    while waiting:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit(); exit()
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                waiting = False
+
+def run_level(level_number, monster_speed, fruit_count):
+    player_radius = 25
+    p1_x, p1_y = 100, HEIGHT//2
+    p2_x, p2_y = 150, HEIGHT//2
+    speed = 4
+    monster_size = 40
+    monster_x = WIDTH - 100
+    monster_y = random.randint(0, HEIGHT - monster_size)
+    fruits = [(random.randint(100, 700), random.randint(100, 500)) for _ in range(fruit_count)]
+    score = 0
+    game_over = False
+    level_complete = False
+
+    while True:
+        screen.fill(BLACK)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit(); exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = pygame.mouse.get_pos()
+                if level_complete and draw_button("Siguiente", 50, DARK_GREEN).collidepoint(mx, my):
+                    return "next", score
+                if game_over and draw_button("Reintentar", 50, DARK_RED).collidepoint(mx, my):
+                    return "retry", score
+
+        keys = pygame.key.get_pressed()
+        if not level_complete and not game_over:
+            # Movimiento jugador 1
+            if keys[pygame.K_LEFT]: p1_x -= speed
+            if keys[pygame.K_RIGHT]: p1_x += speed
+            if keys[pygame.K_UP]: p1_y -= speed
+            if keys[pygame.K_DOWN]: p1_y += speed
+            # Movimiento jugador 2
+            if keys[pygame.K_a]: p2_x -= speed
+            if keys[pygame.K_d]: p2_x += speed
+            if keys[pygame.K_w]: p2_y -= speed
+            if keys[pygame.K_s]: p2_y += speed
+
+            # Movimiento monstruo hacia jugador más cercano
+            target_x, target_y = (p1_x, p1_y) if math.hypot(p1_x - monster_x, p1_y - monster_y) < math.hypot(p2_x - monster_x, p2_y - monster_y) else (p2_x, p2_y)
+            dx, dy = target_x - monster_x, target_y - monster_y
+            dist = math.hypot(dx, dy)
+            if dist != 0:
+                dx, dy = dx / dist, dy / dist
+            monster_x += dx * monster_speed
+            monster_y += dy * monster_speed
+
+            # Colisión con monstruo
+            if math.hypot(p1_x - monster_x, p1_y - monster_y) < player_radius + monster_size/2 or \
+               math.hypot(p2_x - monster_x, p2_y - monster_y) < player_radius + monster_size/2:
+                game_over = True
+                save_highscore(score)
+
+            # Recolectar frutas
+            for fruit in fruits[:]:
+                if any(math.hypot(px - fruit[0], py - fruit[1]) < player_radius + 12 for px, py in [(p1_x, p1_y), (p2_x, p2_y)]):
+                    fruits.remove(fruit)
+                    score += 10
+
+            if not fruits:
+                level_complete = True
+                save_highscore(score)
+
+        # Dibujos
+        draw_player(p1_x, p1_y, player_radius, RED)
+        draw_player(p2_x, p2_y, player_radius, BLUE)
+        draw_monster(monster_x, monster_y, monster_size)
+        draw_fruits(fruits)
+
+        # Puntaje
+        score_text = FONT.render(f"Puntaje: {score}", True, WHITE)
+        screen.blit(score_text, (10, 10))
+
+        if level_complete:
+            text = BIG_FONT.render(f"¡Nivel {level_number} Completado!", True, WHITE)
+            screen.blit(text, (WIDTH//2 - text.get_width()//2, HEIGHT//2 - 60))
+            draw_button("Siguiente", 50, DARK_GREEN)
+        elif game_over:
+            text = BIG_FONT.render("¡Han perdido!", True, RED)
+            screen.blit(text, (WIDTH//2 - text.get_width()//2, HEIGHT//2 - 60))
+            draw_button("Reintentar", 50, DARK_RED)
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+def main_menu():
+    while True:
+        screen.fill(BLACK)
+        title = BIG_FONT.render("BAD CIRCLES", True, WHITE)
+        screen.blit(title, (WIDTH//2 - title.get_width()//2, 100))
+        btn1 = draw_button("Jugar", 0, DARK_GREEN)
+        btn2 = draw_button("Instrucciones", 70, (50, 50, 150))
+        btn3 = draw_button("Mejores Puntajes", 140, (150, 100, 0))
+        btn4 = draw_button("Salir", 210, DARK_RED)
+
+        pygame.display.flip()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit(); exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = pygame.mouse.get_pos()
+                if btn1.collidepoint(mx, my): return
+                elif btn2.collidepoint(mx, my): show_instructions()
+                elif btn3.collidepoint(mx, my): show_highscores()
+                elif btn4.collidepoint(mx, my): pygame.quit(); exit()
+
+def main():
+    # Mostrar pantalla de presentación (Splash Screen)
+    mostrar_splash_screen()
+
+    # Después de la pantalla de presentación, mostrar el menú principal
+    main_menu()
+
+    # Comienza el juego
+    level = 1
+    while True:
+        result, score = run_level(level, 0.5 + level * 0.3, 3 + level * 2)
+        if result == "next":
+            level += 1
+        elif result == "retry":
+            continue
+
+if __name__ == "__main__":
+    main()
+

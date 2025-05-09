@@ -1,214 +1,101 @@
 import pygame
-import sys
 import random
-# Inicialización
-pygame.init()
+import math
 
-# Pantalla
-WIDTH, HEIGHT = 640, 480
-win = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("BAD CIRCLES - Nivel 1")
+pygame.init()
+ANCHO, ALTO = 800, 600
+pantalla = pygame.display.set_mode((ANCHO, ALTO))
+pygame.display.set_caption("BAD CIRCLES")
 
 # Colores
-WHITE = (255, 255, 255)
-RED = (220, 50, 50)
-GREEN = (50, 220, 50)
-BLUE = (50, 100, 255)
-BLACK = (0, 0, 0)
-YELLOW = (255, 255, 0)
+FONDO = (180, 240, 255)
+AZUL_CLARO = (200, 240, 255)
+AZUL_HIELO = (160, 210, 255)
+NEGRO = (0, 0, 0)
+ROJO = (255, 100, 100)
+ENEMIGO_COLOR = (100, 30, 30)
+FRUTAS_COLORES = [(255, 0, 0), (255, 165, 0), (138, 43, 226)] # manzana, naranja, uva
 
-# Jugador
-player_radius = 15
-player_x, player_y = 100, 100
-player_speed = 4
-
-# Frutas
-fruit_size = 12
-fruits = [(random.randint(50, WIDTH-50), random.randint(50, HEIGHT-50)) for _ in range(8)]
-
-# Enemigos
-enemy1 = {'x': 300, 'y': 200, 'dir': 1, 'speed': 2}
-enemy2 = {'x': 500, 'y': 350, 'dir': -1, 'speed': 1.5}
-
-# Texto
-font = pygame.font.SysFont(None, 40)
-
-# Reloj
-clock = pygame.time.Clock()
-
-def draw_game():
-    win.fill(BLACK)
-    # Frutas
-    for fx, fy in fruits:
-        pygame.draw.rect(win, GREEN, (fx, fy, fruit_size, fruit_size))
-    # Jugador
-    pygame.draw.circle(win, BLUE, (player_x, player_y), player_radius)
-    # Enemigos
-    pygame.draw.circle(win, RED, (int(enemy1['x']), int(enemy1['y'])), player_radius)
-    pygame.draw.circle(win, RED, (int(enemy2['x']), int(enemy2['y'])), player_radius)
-    pygame.display.update()
-
-def mostrar_mensaje(texto, color):
-    mensaje = font.render(texto, True, color)
-    rect = mensaje.get_rect(center=(WIDTH//2, HEIGHT//2))
-    win.blit(mensaje, rect)
-    pygame.display.update()
-    pygame.time.delay(2000)
-
-# Juego
-run = True
-while run:
-    clock.tick(60)
-    keys = pygame.key.get_pressed()
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-
-    # Movimiento jugador
-    if keys[pygame.K_LEFT]: player_x -= player_speed
-    if keys[pygame.K_RIGHT]: player_x += player_speed
-    if keys[pygame.K_UP]: player_y -= player_speed
-    if keys[pygame.K_DOWN]: player_y += player_speed
-
-    # Limitar al borde
-    player_x = max(player_radius, min(WIDTH - player_radius, player_x))
-    player_y = max(player_radius, min(HEIGHT - player_radius, player_y))
-
-    # Movimiento enemigos
-    enemy1['x'] += enemy1['dir'] * enemy1['speed']
-    if enemy1['x'] <= 0 or enemy1['x'] >= WIDTH:
-        enemy1['dir'] *= -1
-
-    enemy2['y'] += enemy2['dir'] * enemy2['speed']
-    if enemy2['y'] <= 0 or enemy2['y'] >= HEIGHT:
-        enemy2['dir'] *= -1
-
-    # Aumentar dificultad si quedan pocas frutas
-    if len(fruits) <= 3:
-        enemy1['speed'] = 3
-        enemy2['speed'] = 2.5
-
-    # Recolección de frutas
-    fruits = [f for f in fruits if not (abs(player_x - f[0]) < 18 and abs(player_y - f[1]) < 18)]
-
-    # Colisión con enemigos
-    for enemy in [enemy1, enemy2]:
-        if abs(player_x - enemy['x']) < player_radius * 2 and abs(player_y - enemy['y']) < player_radius * 2:
-            mostrar_mensaje("¡Perdiste!", YELLOW)
-            run = False
-
-    # Fin del nivel
-    if not fruits:
-        mostrar_mensaje("¡Nivel Completado!", GREEN)
-        run = False
-
-    draw_game()
-
-pygame.quit()
-
-# Inicialización
-pygame.init()
-
-# Pantalla
-WIDTH, HEIGHT = 640, 480
-win = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Bad Circles - Nivel 1")
-
-# Colores
-WHITE = (255, 255, 255)
-RED = (220, 50, 50)
-GREEN = (50, 220, 50)
-BLUE = (50, 100, 255)
-BLACK = (0, 0, 0)
-YELLOW = (255, 255, 0)
-
-# Jugador
-player_radius = 15
-player_x, player_y = 100, 100
-player_speed = 4
+# Jugador y enemigo
+jugador = pygame.Rect(400, 300, 40, 40)
+enemigo = pygame.Rect(100, 100, 40, 40)
+vel_jugador = 4
+vel_enemigo = 3
 
 # Frutas
-fruit_size = 12
-fruits = [(random.randint(50, WIDTH-50), random.randint(50, HEIGHT-50)) for _ in range(8)]
+frutas = [pygame.Rect(random.randint(50, 750), random.randint(50, 550), 20, 25) for _ in range(5)]
+puntos = 0
+reloj = pygame.time.Clock()
+fuente = pygame.font.Font(None, 36)
 
-# Enemigos
-enemy1 = {'x': 300, 'y': 200, 'dir': 1, 'speed': 2}
-enemy2 = {'x': 500, 'y': 350, 'dir': -1, 'speed': 1.5}
+def dibujar_fondo():
+    pantalla.fill(FONDO)
+    for x in range(0, ANCHO, 40):
+        for y in range(0, ALTO, 40):
+            pygame.draw.rect(pantalla, AZUL_HIELO, (x, y, 35, 35), 1)
 
-# Texto
-font = pygame.font.SysFont(None, 40)
+def dibujar_jugador():
+    pygame.draw.circle(pantalla, ROJO, jugador.center, 20)
+    cx, cy = jugador.center
+    pygame.draw.circle(pantalla, NEGRO, (cx - 8, cy - 6), 3) # ojo izq
+    pygame.draw.circle(pantalla, NEGRO, (cx + 8, cy - 6), 3) # ojo der
+    pygame.draw.arc(pantalla, NEGRO, (cx - 10, cy + 5, 20, 10), math.pi, 2 * math.pi, 2) # boca enojada
 
-# Reloj
-clock = pygame.time.Clock()
+def dibujar_enemigo():
+    pygame.draw.circle(pantalla, ENEMIGO_COLOR, enemigo.center, 20)
 
-def draw_game():
-    win.fill(BLACK)
-    # Frutas
-    for fx, fy in fruits:
-        pygame.draw.rect(win, GREEN, (fx, fy, fruit_size, fruit_size))
-    # Jugador
-    pygame.draw.circle(win, BLUE, (player_x, player_y), player_radius)
-    # Enemigos
-    pygame.draw.circle(win, RED, (int(enemy1['x']), int(enemy1['y'])), player_radius)
-    pygame.draw.circle(win, RED, (int(enemy2['x']), int(enemy2['y'])), player_radius)
-    pygame.display.update()
+def mover_enemigo():
+    dx, dy = jugador.centerx - enemigo.centerx, jugador.centery - enemigo.centery
+    dist = math.hypot(dx, dy)
+    if dist > 0:
+        enemigo.x += int(vel_enemigo * dx / dist)
+        enemigo.y += int(vel_enemigo * dy / dist)
 
-def mostrar_mensaje(texto, color):
-    mensaje = font.render(texto, True, color)
-    rect = mensaje.get_rect(center=(WIDTH//2, HEIGHT//2))
-    win.blit(mensaje, rect)
-    pygame.display.update()
-    pygame.time.delay(2000)
+def dibujar_frutas():
+    for i, fruta in enumerate(frutas):
+        color = FRUTAS_COLORES[i % len(FRUTAS_COLORES)]
+        pygame.draw.ellipse(pantalla, color, fruta) # cuerpo de fruta
+        pygame.draw.line(pantalla, (34, 139, 34), (fruta.centerx, fruta.top), (fruta.centerx, fruta.top - 5), 2) # tallo
 
-# Juego
-run = True
-while run:
-    clock.tick(60)
-    keys = pygame.key.get_pressed()
+def mostrar_puntos():
+    texto = fuente.render(f"Puntos: {puntos}", True, NEGRO)
+    pantalla.blit(texto, (10, 10))
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
+# Juego principal
+ejecutando = True
+while ejecutando:
+    for e in pygame.event.get():
+        if e.type == pygame.QUIT:
+            ejecutando = False
 
-    # Movimiento jugador
-    if keys[pygame.K_LEFT]: player_x -= player_speed
-    if keys[pygame.K_RIGHT]: player_x += player_speed
-    if keys[pygame.K_UP]: player_y -= player_speed
-    if keys[pygame.K_DOWN]: player_y += player_speed
+    teclas = pygame.key.get_pressed()
+    jugador.x += (teclas[pygame.K_RIGHT] - teclas[pygame.K_LEFT]) * vel_jugador
+    jugador.y += (teclas[pygame.K_DOWN] - teclas[pygame.K_UP]) * vel_jugador
 
-    # Limitar al borde
-    player_x = max(player_radius, min(WIDTH - player_radius, player_x))
-    player_y = max(player_radius, min(HEIGHT - player_radius, player_y))
+    mover_enemigo()
 
-    # Movimiento enemigos
-    enemy1['x'] += enemy1['dir'] * enemy1['speed']
-    if enemy1['x'] <= 0 or enemy1['x'] >= WIDTH:
-        enemy1['dir'] *= -1
+    for i, fruta in enumerate(frutas):
+        if jugador.colliderect(fruta):
+            puntos += 1
+            frutas[i].x = random.randint(50, 750)
+            frutas[i].y = random.randint(50, 550)
 
-    enemy2['y'] += enemy2['dir'] * enemy2['speed']
-    if enemy2['y'] <= 0 or enemy2['y'] >= HEIGHT:
-        enemy2['dir'] *= -1
+    if jugador.colliderect(enemigo):
+        ejecutando = False
 
-    # Aumentar dificultad si quedan pocas frutas
-    if len(fruits) <= 3:
-        enemy1['speed'] = 3
-        enemy2['speed'] = 2.5
+    # Dibujar
+    dibujar_fondo()
+    dibujar_jugador()
+    dibujar_enemigo()
+    dibujar_frutas()
+    mostrar_puntos()
+    pygame.display.flip()
+    reloj.tick(60)
 
-    # Recolección de frutas
-    fruits = [f for f in fruits if not (abs(player_x - f[0]) < 18 and abs(player_y - f[1]) < 18)]
-
-    # Colisión con enemigos
-    for enemy in [enemy1, enemy2]:
-        if abs(player_x - enemy['x']) < player_radius * 2 and abs(player_y - enemy['y']) < player_radius * 2:
-            mostrar_mensaje("¡Perdiste!", YELLOW)
-            run = False
-
-    # Fin del nivel
-    if not fruits:
-        mostrar_mensaje("¡Nivel Completado!", GREEN)
-        run = False
-
-    draw_game()
-
+# Mensaje final
+pantalla.fill(FONDO)
+mensaje = fuente.render(f"¡Perdiste! Puntos: {puntos}", True, NEGRO)
+pantalla.blit(mensaje, (ANCHO//2 - mensaje.get_width()//2, ALTO//2))
+pygame.display.flip()
+pygame.time.wait(3000)
 pygame.quit()

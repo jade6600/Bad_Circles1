@@ -1,143 +1,139 @@
 import pygame
 import random
+import math
 
 pygame.init()
 
-# Tamaño
-WIDTH, HEIGHT = 640, 480
-TILE = 32
-ROWS = HEIGHT // TILE
-COLS = WIDTH // TILE
-
-win = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("BAD CIRCLES - Nivel 1")
+# Pantalla
+ANCHO, ALTO = 800, 600
+pantalla = pygame.display.set_mode((ANCHO, ALTO))
+pygame.display.set_caption("BAD CIRCLES")
 
 # Colores
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-BLUE = (70, 130, 255)
-RED = (220, 60, 60)
-GREEN = (60, 200, 100)
-ORANGE = (255, 165, 0)
-PURPLE = (160, 100, 255)
-CYAN = (120, 255, 255)
-GRAY = (220, 220, 220)
-BGCOLOR = (240, 240, 255)
+FONDO = (180, 240, 255)
+PASTO = (110, 200, 80)
+NEGRO = (0, 0, 0)
+ROJO = (255, 100, 100)
+ENEMIGO_COLOR = (50, 20, 20)
+FRUTAS_COLORES = [(255, 0, 0), (255, 165, 0), (138, 43, 226)]
 
-font = pygame.font.SysFont(None, 32)
+# Jugador y enemigo
+jugador = pygame.Rect(400, 300, 40, 40)
+enemigo = pygame.Rect(100, 100, 40, 40)
+vel_jugador = 4
+vel_enemigo = 1.2
 
-player = {'x': 5, 'y': 5, 'dir': 'DOWN'}
-score = 0
-fruits = [(random.randint(2, COLS-3), random.randint(2, ROWS-3)) for _ in range(6)]
-enemy = {'x': 15, 'y': 10}
-ice_blocks = []
-clock = pygame.time.Clock()
+# Bloques tipo laberinto
+bloques = [pygame.Rect(random.randint(0, ANCHO - 50), random.randint(0, ALTO - 50), 40, 40) for _ in range(25)]
 
-def draw_face(x, y):
-    px, py = x * TILE, y * TILE
-    center = (px + TILE//2, py + TILE//2)
-    pygame.draw.circle(win, BLUE, center, 14)
-    pygame.draw.circle(win, BLACK, (center[0] - 5, center[1] - 6), 2)
-    pygame.draw.circle(win, BLACK, (center[0] + 5, center[1] - 6), 2)
-    pygame.draw.line(win, BLACK, (center[0] - 8, center[1] - 10), (center[0] - 2, center[1] - 8), 2)
-    pygame.draw.line(win, BLACK, (center[0] + 2, center[1] - 8), (center[0] + 8, center[1] - 10), 2)
-    pygame.draw.arc(win, BLACK, (center[0] - 6, center[1] + 4, 12, 6), 3.14, 0, 2)
+# Frutas
+frutas = [pygame.Rect(random.randint(50, 750), random.randint(50, 550), 20, 25) for _ in range(5)]
 
-def draw_background():
-    win.fill(BGCOLOR)
-    for x in range(0, WIDTH, TILE):
-        for y in range(0, HEIGHT, TILE):
-            if (x//TILE + y//TILE) % 2 == 0:
-                pygame.draw.rect(win, GRAY, (x, y, TILE, TILE), 1)
+# Fuente y reloj
+fuente = pygame.font.Font(None, 36)
+reloj = pygame.time.Clock()
+puntos = 0
 
-def draw():
-    draw_background()
-    for fx, fy in fruits:
-        cx, cy = fx * TILE + TILE // 2, fy * TILE + TILE // 2
-        color = random.choice([GREEN, ORANGE, PURPLE])
-        pygame.draw.circle(win, color, (cx, cy), 10)
-        pygame.draw.line(win, BLACK, (cx, cy - 10), (cx, cy - 15), 2)
-    draw_face(player['x'], player['y'])
-    ex, ey = enemy['x'], enemy['y']
-    pygame.draw.circle(win, RED, (ex * TILE + TILE//2, ey * TILE + TILE//2), 14)
-    for bx, by in ice_blocks:
-        pygame.draw.rect(win, CYAN, (bx*TILE+4, by*TILE+4, TILE-8, TILE-8))
-    score_text = font.render(f"Puntos: {score}", True, BLACK)
-    win.blit(score_text, (10, 10))
-    pygame.display.update()
+def dibujar_fondo():
+    pantalla.fill(FONDO)
+    for x in range(0, ANCHO, 40):
+        for y in range(0, ALTO, 40):
+            pygame.draw.rect(pantalla, PASTO, (x, y, 38, 38), 1)
 
-def mensaje(texto, color):
-    msg = font.render(texto, True, color)
-    rect = msg.get_rect(center=(WIDTH//2, HEIGHT//2))
-    win.blit(msg, rect)
-    pygame.display.update()
-    pygame.time.delay(2000)
+def dibujar_jugador():
+    pygame.draw.circle(pantalla, ROJO, jugador.center, 20)
+    cx, cy = jugador.center
+    pygame.draw.circle(pantalla, NEGRO, (cx - 8, cy - 6), 3)
+    pygame.draw.circle(pantalla, NEGRO, (cx + 8, cy - 6), 3)
+    pygame.draw.arc(pantalla, NEGRO, (cx - 10, cy + 5, 20, 10), math.pi, 2 * math.pi, 2)
 
-def colocar_hielo():
-    dx, dy = 0, 0
-    if player['dir'] == 'UP': dy = -1
-    if player['dir'] == 'DOWN': dy = 1
-    if player['dir'] == 'LEFT': dx = -1
-    if player['dir'] == 'RIGHT': dx = 1
-    nx, ny = player['x'] + dx, player['y'] + dy
-    if (nx, ny) not in ice_blocks and 0 <= nx < COLS and 0 <= ny < ROWS:
-        ice_blocks.append((nx, ny))
+def dibujar_enemigo():
+    pygame.draw.rect(pantalla, ENEMIGO_COLOR, enemigo)
 
-def mover(entidad, dx, dy):
-    nx, ny = entidad['x'] + dx, entidad['y'] + dy
-    if 0 <= nx < COLS and 0 <= ny < ROWS and (nx, ny) not in ice_blocks:
-        entidad['x'], entidad['y'] = nx, ny
+def dibujar_bloques():
+    for b in bloques:
+        pygame.draw.rect(pantalla, (100, 200, 100), b)
 
-def mover_enemigo_lento(e, paso):
-    if paso % 2 != 0:
-        return
-    dx = 1 if e['x'] < player['x'] else -10 if e['x'] > player['x'] else 0
-    dy = 1 if e['y'] < player['y'] else -10 if e['y'] > player['y'] else 0
-    opciones = [(dx, 0), (0, dy), (dx, dy)]
-    random.shuffle(opciones)
-    for ox, oy in opciones:
-        nx, ny = e['x'] + ox, e['y'] + oy
-        if 0 <= nx < COLS and 0 <= ny < ROWS and (nx, ny) not in ice_blocks:
-            e['x'], e['y'] = nx, ny
-            break
+def dibujar_frutas():
+    for i, fruta in enumerate(frutas):
+        color = FRUTAS_COLORES[i % len(FRUTAS_COLORES)]
+        pygame.draw.ellipse(pantalla, color, fruta)
+        pygame.draw.line(pantalla, (34, 139, 34), (fruta.centerx, fruta.top), (fruta.centerx, fruta.top - 5), 2)
 
-run = True
-paso = 0
-while run:
-    clock.tick(8)
-    paso += 1
-    keys = pygame.key.get_pressed()
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-            colocar_hielo()
-    if keys[pygame.K_UP]:
-        player['dir'] = 'UP'
-        mover(player, 0, -1)
-    elif keys[pygame.K_DOWN]:
-        player['dir'] = 'DOWN'
-        mover(player, 0, 1)
-    elif keys[pygame.K_LEFT]:
-        player['dir'] = 'LEFT'
-        mover(player, -1, 0)
-    elif keys[pygame.K_RIGHT]:
-        player['dir'] = 'RIGHT'
-        mover(player, 1, 0)
-    mover_enemigo_lento(enemy, paso)
-    new_fruits = []
-    for fx, fy in fruits:
-        if not (fx == player['x'] and fy == player['y']):
-            new_fruits.append((fx, fy))
-        else:
-            score += 1
-    fruits = new_fruits
-    if player['x'] == enemy['x'] and player['y'] == enemy['y']:
-        mensaje("¡Perdiste!", RED)
-        run = False
-    if not fruits:
-        mensaje("¡Ganaste!", GREEN)
-        run = False
-    draw()
+def mostrar_puntos():
+    texto = fuente.render(f"Puntos: {puntos}", True, NEGRO)
+    pantalla.blit(texto, (10, 10))
 
-pygame.quit()
+def mover_enemigo():
+    dx, dy = jugador.centerx - enemigo.centerx, jugador.centery - enemigo.centery
+    dist = math.hypot(dx, dy)
+    if dist != 0:
+        enemigo.x += int(vel_enemigo * dx / dist)
+        enemigo.y += int(vel_enemigo * dy / dist)
+
+    for b in bloques:
+        if enemigo.colliderect(b):
+            enemigo.x -= int(vel_enemigo * dx / dist)
+            enemigo.y -= int(vel_enemigo * dy / dist)
+
+def mover_jugador(teclas):
+    mov_x = (teclas[pygame.K_RIGHT] - teclas[pygame.K_LEFT]) * vel_jugador
+    mov_y = (teclas[pygame.K_DOWN] - teclas[pygame.K_UP]) * vel_jugador
+
+    jugador.x += mov_x
+    for b in bloques:
+        if jugador.colliderect(b):
+            jugador.x -= mov_x
+
+    jugador.y += mov_y
+    for b in bloques:
+        if jugador.colliderect(b):
+            jugador.y -= mov_y
+
+def comprobar_frutas():
+    global puntos
+    for i, fruta in enumerate(frutas):
+        if jugador.colliderect(fruta):
+            puntos += 1
+            frutas[i].x = random.randint(50, 750)
+            frutas[i].y = random.randint(50, 550)
+
+def comprobar_derrota():
+    return jugador.colliderect(enemigo)
+
+def game_over():
+    texto = fuente.render(f"¡Perdiste! Puntos: {puntos}", True, NEGRO)
+    pantalla.blit(texto, (ANCHO//2 - texto.get_width()//2, ALTO//2))
+    pygame.display.flip()
+    pygame.time.wait(3000)
+
+def juego():
+    global puntos
+    corriendo = True
+    while corriendo:
+        for evento in pygame.event.get():
+            if evento.type == pygame.QUIT:
+                corriendo = False
+
+        teclas = pygame.key.get_pressed()
+        mover_jugador(teclas)
+        mover_enemigo()
+        comprobar_frutas()
+
+        if comprobar_derrota():
+            game_over()
+            corriendo = False
+
+        dibujar_fondo()
+        dibujar_bloques()
+        dibujar_frutas()
+        dibujar_jugador()
+        dibujar_enemigo()
+        mostrar_puntos()
+
+        pygame.display.flip()
+        reloj.tick(60)
+
+    pygame.quit()
+
+juego()
