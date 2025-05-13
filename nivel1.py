@@ -1,13 +1,11 @@
 import pygame
 import random
 import math
-import os
-import time
 
 # Inicializar Pygame
 pygame.init()
 
-# Splash Screm
+# Splash Screem
 def mostrar_splash_screen():
     ancho_ventana = 800
     alto_ventana = 600
@@ -46,7 +44,7 @@ def mostrar_splash_screen():
                 pygame.quit()
                 exit()
             elif evento.type == pygame.KEYDOWN or evento.type == pygame.MOUSEBUTTONDOWN:
-                ejecutando = False  
+                ejecutando = False
 
         ventana.fill(AZUL)
         ventana.blit(superficie_principal, rect_principal)
@@ -57,12 +55,10 @@ def mostrar_splash_screen():
         pygame.display.flip()
         reloj.tick(60)
 
-# funciones
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Bad Circles")
 
-# Colores
 RED = (255, 0, 0)
 BLUE = (0, 150, 255)
 WHITE = (255, 255, 255)
@@ -76,6 +72,11 @@ FPS = 60
 FONT = pygame.font.Font(None, 36)
 BIG_FONT = pygame.font.Font(None, 60)
 
+TILE_SIZE = 40
+GRID_WIDTH = WIDTH // TILE_SIZE
+GRID_HEIGHT = HEIGHT // TILE_SIZE
+ice_blocks = [[False for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
+
 def draw_player(x, y, radius, color):
     pygame.draw.circle(screen, color, (x, y), radius)
 
@@ -85,6 +86,20 @@ def draw_monster(x, y, size):
 def draw_fruits(fruits):
     for fruit in fruits:
         pygame.draw.circle(screen, WHITE, fruit, 12)
+
+def draw_ice_blocks():
+    for row in range(GRID_HEIGHT):
+        for col in range(GRID_WIDTH):
+            if ice_blocks[row][col]:
+                pygame.draw.rect(screen, (180, 240, 255), (col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+                pygame.draw.rect(screen, WHITE, (col * TILE_SIZE, row * TILE_SIZE, TILE_SIZE, TILE_SIZE), 2)
+
+def toggle_ice_row(y_pos):
+    row = y_pos // TILE_SIZE
+    if any(ice_blocks[row]):
+        ice_blocks[row] = [False for _ in range(GRID_WIDTH)]
+    else:
+        ice_blocks[row] = [True for _ in range(GRID_WIDTH)]
 
 def draw_button(text, y_offset, color_bg):
     button_rect = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 + y_offset, 200, 50)
@@ -102,7 +117,7 @@ def save_highscore(score):
 
 def show_highscores():
     screen.fill(BLACK)
-    title = BIG_FONT.render("🏆 Mejores Puntajes", True, WHITE)
+    title = BIG_FONT.render("\U0001F3C6 Mejores Puntajes", True, WHITE)
     screen.blit(title, (WIDTH//2 - title.get_width()//2, 40))
     try:
         with open("highscores.txt", "r") as f:
@@ -123,6 +138,8 @@ def show_instructions():
         "Jugador 2: W A S D",
         "Recolecten TODAS las frutas para avanzar.",
         "¡Eviten al monstruo! Si uno es atrapado, pierden los dos.",
+        "Jugador 1: Poder hielo = L",
+        "Jugador 2: Poder hielo = R",
         "",
         "Presiona ESC para volver al menú."
     ]
@@ -138,7 +155,50 @@ def show_instructions():
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 waiting = False
 
+def character_selection_menu():
+    selected_p1 = None
+    selected_p2 = None
+    options = ["Rojo", "Azul"]
+    while selected_p1 is None or selected_p2 is None:
+        screen.fill(BLACK)
+        title = BIG_FONT.render("Selecciona tu personaje", True, WHITE)
+        screen.blit(title, (WIDTH//2 - title.get_width()//2, 40))
+
+        for i, opt in enumerate(options):
+            color = RED if opt == "Rojo" else BLUE
+            label1 = FONT.render(f"Jugador 1: {opt}", True, WHITE)
+            label2 = FONT.render(f"Jugador 2: {opt}", True, WHITE)
+            rect1 = pygame.Rect(150, 150 + i * 100, 200, 60)
+            rect2 = pygame.Rect(450, 150 + i * 100, 200, 60)
+
+            pygame.draw.rect(screen, color, rect1, border_radius=10)
+            pygame.draw.rect(screen, color, rect2, border_radius=10)
+            screen.blit(label1, (rect1.x + 20, rect1.y + 15))
+            screen.blit(label2, (rect2.x + 20, rect2.y + 15))
+
+            if selected_p1 == opt:
+                pygame.draw.rect(screen, WHITE, rect1, 4)
+            if selected_p2 == opt:
+                pygame.draw.rect(screen, WHITE, rect2, 4)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit(); exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mx, my = pygame.mouse.get_pos()
+                for i, opt in enumerate(options):
+                    if pygame.Rect(150, 150 + i * 100, 200, 60).collidepoint(mx, my):
+                        selected_p1 = opt
+                    elif pygame.Rect(450, 150 + i * 100, 200, 60).collidepoint(mx, my):
+                        selected_p2 = opt
+
+        pygame.display.flip()
+        clock.tick(60)
+
 def run_level(level_number, monster_speed, fruit_count):
+    global ice_blocks
+    ice_blocks = [[False for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
+
     player_radius = 25
     p1_x, p1_y = 100, HEIGHT//2
     p2_x, p2_y = 150, HEIGHT//2
@@ -165,18 +225,22 @@ def run_level(level_number, monster_speed, fruit_count):
 
         keys = pygame.key.get_pressed()
         if not level_complete and not game_over:
-            # Movimiento jugador 1
             if keys[pygame.K_LEFT]: p1_x -= speed
             if keys[pygame.K_RIGHT]: p1_x += speed
             if keys[pygame.K_UP]: p1_y -= speed
             if keys[pygame.K_DOWN]: p1_y += speed
-            # Movimiento jugador 2
             if keys[pygame.K_a]: p2_x -= speed
             if keys[pygame.K_d]: p2_x += speed
             if keys[pygame.K_w]: p2_y -= speed
             if keys[pygame.K_s]: p2_y += speed
 
-            # Movimiento monstruo hacia jugador más cercano
+            if keys[pygame.K_l]:
+                toggle_ice_row(p1_y)
+                pygame.time.wait(200)
+            if keys[pygame.K_r]:
+                toggle_ice_row(p2_y)
+                pygame.time.wait(200)
+
             target_x, target_y = (p1_x, p1_y) if math.hypot(p1_x - monster_x, p1_y - monster_y) < math.hypot(p2_x - monster_x, p2_y - monster_y) else (p2_x, p2_y)
             dx, dy = target_x - monster_x, target_y - monster_y
             dist = math.hypot(dx, dy)
@@ -185,13 +249,11 @@ def run_level(level_number, monster_speed, fruit_count):
             monster_x += dx * monster_speed
             monster_y += dy * monster_speed
 
-            # Colisión con monstruo
             if math.hypot(p1_x - monster_x, p1_y - monster_y) < player_radius + monster_size/2 or \
                math.hypot(p2_x - monster_x, p2_y - monster_y) < player_radius + monster_size/2:
                 game_over = True
                 save_highscore(score)
 
-            # Recolectar frutas
             for fruit in fruits[:]:
                 if any(math.hypot(px - fruit[0], py - fruit[1]) < player_radius + 12 for px, py in [(p1_x, p1_y), (p2_x, p2_y)]):
                     fruits.remove(fruit)
@@ -201,13 +263,12 @@ def run_level(level_number, monster_speed, fruit_count):
                 level_complete = True
                 save_highscore(score)
 
-        # Dibujitos
+        draw_ice_blocks()
         draw_player(p1_x, p1_y, player_radius, RED)
         draw_player(p2_x, p2_y, player_radius, BLUE)
         draw_monster(monster_x, monster_y, monster_size)
         draw_fruits(fruits)
 
-        # Puntaje
         score_text = FONT.render(f"Puntaje: {score}", True, WHITE)
         screen.blit(score_text, (10, 10))
 
@@ -216,7 +277,7 @@ def run_level(level_number, monster_speed, fruit_count):
             screen.blit(text, (WIDTH//2 - text.get_width()//2, HEIGHT//2 - 60))
             draw_button("Siguiente", 50, DARK_GREEN)
         elif game_over:
-            text = BIG_FONT.render("¡Han perdido!", True, RED)
+            text = BIG_FONT.render("\u00a1Han perdido!", True, RED)
             screen.blit(text, (WIDTH//2 - text.get_width()//2, HEIGHT//2 - 60))
             draw_button("Reintentar", 50, DARK_RED)
 
@@ -245,13 +306,9 @@ def main_menu():
                 elif btn4.collidepoint(mx, my): pygame.quit(); exit()
 
 def main():
-    # Mostrar Splash Screen
     mostrar_splash_screen()
-
-    # mostrar el menú principal
     main_menu()
-
-    # juego
+    character_selection_menu()
     level = 1
     while True:
         result, score = run_level(level, 0.5 + level * 0.3, 3 + level * 2)
@@ -262,4 +319,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
