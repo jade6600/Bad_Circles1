@@ -5,6 +5,8 @@ import math
 # Inicializar Pygame
 pygame.init()
 
+
+
 # Splash Screem
 def mostrar_splash_screen():
     ancho_ventana = 800
