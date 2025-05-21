@@ -11,6 +11,7 @@ ARCHIVO_PUNTAJES = "mejores_puntajes.txt"
 
 # iniciar 
 pygame.init()
+pygame.mixer.init()
 screen = pygame.display.set_mode((ANCHO, ALTO))
 pygame.display.set_caption("Bad Circles")
 clock = pygame.time.Clock()
@@ -19,6 +20,16 @@ fuente_menu = pygame.font.SysFont("arial", 30)
 fuente_info = pygame.font.SysFont("arial", 24)
 BLANCO = (255, 255, 255)
 NEGRO = (0, 0, 0)
+
+# sonidos
+sonido_puntos = pygame.mixer.Sound("sounds/puntos.mp3")
+sonido_perdida = pygame.mixer.Sound("sounds/Partida_perdida.mp3")
+sonido_ganada = pygame.mixer.Sound("sounds/Partida_ganada.mp3")
+sonido_nuevo_nivel = pygame.mixer.Sound("sounds/nuevo_nivel.mp3")
+musica_nivel1 = "sounds/Musica_nivel1.mp3"
+musica_nivel2 = "sounds/Musica_nivel2.mp3"
+musica_nivel3 = "sounds/Musica_nivel3.mp3"
+musica_menu = "sounds/musica_menu.mp3"
 
 # imagnes
 try:
@@ -82,7 +93,6 @@ class Boton:
 
 btn_instrucciones = Boton("Instrucciones", ANCHO//2 - 125, 180)
 btn_puntajes = Boton("Mejores Puntajes", ANCHO//2 - 125, 250)
-
 btn_jugar = Boton("Jugar", ANCHO//2 - 125, 320)
 btn_volver_menu = Boton("Volver al Menú", ANCHO//2 - 125, 520)
 btn_reintentar = Boton("Volver a Intentar", ANCHO//2 - 125, 350)
@@ -122,10 +132,12 @@ def reset_juego():
     jugador2_vivo = True
     generar_frutas()
     vel_villano = vel_villano_base
+    pygame.mixer.music.load(musica_nivel1)
+    pygame.mixer.music.play(-1)
 
 def generar_frutas():
     frutas.clear()
-    for _ in range(15 + nivel*5):  # Esto para que aparescan mas fruticas lindas
+    for _ in range(15 + nivel*5):
         x = random.randint(30, ANCHO - 30)
         y = random.randint(100, ALTO - 30)
         frutas.append(pygame.Rect(x, y, 30, 30))
@@ -135,6 +147,13 @@ def avanzar_nivel():
     nivel += 1
     vel_villano = vel_villano_base + nivel * 0.7
     generar_frutas()
+    sonido_nuevo_nivel.play()
+    if nivel == 1:
+        pygame.mixer.music.load(musica_nivel2)
+        pygame.mixer.music.play(-1)
+    elif nivel == 2:
+        pygame.mixer.music.load(musica_nivel3)
+        pygame.mixer.music.play(-1)
 
 def mover_jugador(teclas, jugador_rect, controles):
     if not jugador1_vivo and jugador_rect == jugador1:
