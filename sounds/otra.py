@@ -265,7 +265,7 @@ def dibujar_juego():
 def dibujar_splash():
     screen.fill(NEGRO)
     dibujar_texto_centrado(screen, "Bad Circles", fuente_titulo, BLANCO, 150)
-    dibujar_texto_centrado(screen, "Spreth Florez, Nicolle Macias, Jorge Silva", fuente_info, BLANCO, 220)
+    dibujar_texto_centrado(screen, "Soreth Florez, Nicolle Macias, Jorge Silva", fuente_info, BLANCO, 220)
     dibujar_texto_centrado(screen, "Especialidad de Sistemas", fuente_info, BLANCO, 260)
     dibujar_texto_centrado(screen, "Colegio San José de Guanentá", fuente_info, BLANCO, 300)
     # logos
