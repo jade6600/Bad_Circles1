@@ -23,24 +23,24 @@ BLANCO = (255, 255, 255)
 NEGRO = (0, 0, 0)
 
 # sonidos
-sonido_puntos = pygame.mixer.Sound("sounds/puntos.mp3")
-sonido_perdida = pygame.mixer.Sound("sounds/Partida_perdida.mp3")
-sonido_ganada = pygame.mixer.Sound("sounds/Partida_ganada.mp3")
-sonido_nuevo_nivel = pygame.mixer.Sound("sounds/nuevo_nivel.mp3")
-musica_nivel1 = "sounds/Musica_nivel1.mp3"
-musica_nivel2 = "sounds/Musica_nivel2.mp3"
-musica_nivel3 = "sounds/Musica_nivel3.mp3"
-musica_menu = "sounds/musica_menu.mp3"
+sonido_puntos = pygame.mixer.Sound("sounds/puntos.ogg")
+sonido_perdida = pygame.mixer.Sound("sounds/Partida_perdida.ogg")
+sonido_ganada = pygame.mixer.Sound("sounds/Partida_ganada.ogg")
+sonido_nuevo_nivel = pygame.mixer.Sound("sounds/Nuevo_nivel-_1_.ogg")
+musica_nivel1 = "sounds/Musica_nivel1.ogg"
+musica_nivel2 = "sounds/Musica_nivel2.ogg"
+musica_nivel3 = "sounds/Musica_nivel3.ogg"
+musica_menu = "sounds/musica_menu.ogg"
 
 # imagnes
 try:
-    fondo_niveles = [pygame.transform.scale(pygame.image.load(f"img/fondo{i}.png"), (ANCHO, ALTO)) for i in range(1,4)]
-    img_jugador1 = pygame.transform.scale(pygame.image.load("img/jugador1.png"), (40, 40))
-    img_jugador2 = pygame.transform.scale(pygame.image.load("img/jugador2.png"), (40, 40))
-    img_fruta = pygame.transform.scale(pygame.image.load("img/fruta.png"), (30, 30))
-    img_villano = pygame.transform.scale(pygame.image.load("img/villano.png"), (50, 50))
-    logo_colegio = pygame.transform.scale(pygame.image.load("img/logo_colegio.png"), (80, 80))
-    logo_sistemas = pygame.transform.scale(pygame.image.load("img/logo_sistemas.png"), (80, 80))
+    fondo_niveles = [pygame.transform.scale(pygame.image.load(f"fondo{i}.png"), (ANCHO, ALTO)) for i in range(1,4)]
+    img_jugador1 = pygame.transform.scale(pygame.image.load("jugador1.png"), (40, 40))
+    img_jugador2 = pygame.transform.scale(pygame.image.load("jugador2.png"), (40, 40))
+    img_fruta = pygame.transform.scale(pygame.image.load("fruta.png"), (30, 30))
+    img_villano = pygame.transform.scale(pygame.image.load("villano.png"), (50, 50))
+    logo_colegio = pygame.transform.scale(pygame.image.load("logo_colegio.png"), (80, 80))
+    logo_sistemas = pygame.transform.scale(pygame.image.load("logo_sistemas.png"), (80, 80))
 except Exception as e:
     print("Error cargando imágenes:", e)
     pygame.quit()
