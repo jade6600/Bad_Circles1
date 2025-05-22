@@ -28,7 +28,7 @@ controles
 ## Enemigos: criatura mìstica
 
 Objeto a recolectar: comida
-![fruta](/guanabana.png
+![fruta](/fruta.png
 )
 Tras un viaje de expedición Toby queda perdido en la gran selva amazónica, su misión será recolectar frutas para poder huir de una criatura extraña, rara y tenebrosa que planea comerselo y resistir el desafiante viaje de regreso a la ciudad más cercana,Leticia.
 ![Villano](/villano.png
@@ -38,7 +38,7 @@ Tras un viaje de expedición Toby queda perdido en la gran selva amazónica, su 
 ![Escenario](/fondo2.png
 )
 - Objeto a recolectar: comida
-![fruta](/guanabana.png
+![fruta](/fruta.png
 )
 Luego de huir de los jaguares hambrientos Toby encuentra su siguiente desafío, la persecución lo hizo terminar a las orillas del río Amazonas,  tendrán como misión recolectar estas frutas y escapar de el villano tenebroso para continuar su viaje de regreso a la ciudad.
 
