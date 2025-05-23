@@ -32,7 +32,7 @@ musica_nivel2 = "sounds/Musica_nivel2.ogg"
 musica_nivel3 = "sounds/Musica_nivel3.ogg"
 musica_menu = "sounds/musica_menu.ogg"
 
-# imagnes
+# imàgenes
 try:
     fondo_niveles = [pygame.transform.scale(pygame.image.load(f"fondo{i}.png"), (ANCHO, ALTO)) for i in range(1,4)]
     img_jugador1 = pygame.transform.scale(pygame.image.load("jugador1.png"), (40, 40))
@@ -46,7 +46,7 @@ except Exception as e:
     pygame.quit()
     sys.exit()
 
-# cositasss
+# espacios
 SPLASH, MENU, INSTRUCCIONES, PUNTAJES, OPCIONES, JUEGO, GAME_OVER, NEXT_LEVEL_SCREEN = range(8)
 estado = SPLASH
 
@@ -61,7 +61,7 @@ jugador1 = pygame.Rect(100, 100, 40, 40)
 jugador2 = pygame.Rect(600, 100, 40, 40)
 villano = pygame.Rect(400, 300, 50, 50)
 
-# Frutas
+# Frutas (listA Vacias)
 frutas = []
 
 # jugadores vivos
@@ -106,7 +106,7 @@ btn_jugar = Boton("Jugar", ANCHO//2 - 125, 320)
 btn_volver_menu = Boton("Volver al Menú", ANCHO//2 - 125, 520)
 btn_reintentar = Boton("Volver a Intentar", ANCHO//2 - 125, 350)
 
-# un monton de funciones 
+# un monton de funciones
 
 def cargar_puntajes():
     if not os.path.isfile(ARCHIVO_PUNTAJES):
